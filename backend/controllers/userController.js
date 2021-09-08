@@ -57,7 +57,7 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 //description : GET User profile
-//Route       : GET /api/users/login
+//Route       : GET /api/users/profile
 //Access      : Private
 
 const getUserProfile = asyncHandler(async (req, res) => {
@@ -103,4 +103,74 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
-export { authUser, registerUser, getUserProfile, updateUserProfile };
+//description : Get all users
+//Route       : PUT /api/users
+//Access      : Private/Admin
+
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({});
+  res.json(users);
+});
+
+//description : Delete user
+//Route       : DELETE /api/users/:id
+//Access      : Private/Admin
+
+const deleteUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  if (user) {
+    await user.remove();
+    res.json({ message: "User removed" });
+  } else {
+    res.status(404);
+    throw new Error("User not Found");
+  }
+});
+
+//description : Get user by ID
+//Route       : GET /api/users/:id
+//Access      : Private/Admin
+const getUserById = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id).select("-password");
+  if (user) {
+    res.json(user);
+  } else {
+    res.status(404);
+    throw new Error("User not Found");
+  }
+});
+
+//description : Update user
+//Route       : PUT /api/users/:id
+//Access      : Private/Admin
+
+const updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (user) {
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    user.isAdmin = Boolean(req.body.isAdmin); // if it is true it will set or else default false will be there
+    const updateUser = await user.save();
+    res.json({
+      _id: updateUser._id,
+      name: updateUser.name,
+      email: updateUser.email,
+      isAdmin: updateUser.isAdmin,
+    });
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
+});
+
+export {
+  authUser,
+  registerUser,
+  getUserProfile,
+  updateUserProfile,
+  getUsers,
+  deleteUser,
+  getUserById,
+  updateUser,
+};
