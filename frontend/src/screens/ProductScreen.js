@@ -179,7 +179,7 @@ const ProductScreen = ({ history, match }) => {
                         <Form.Label>Rating</Form.Label>
                         <Form.Control
                           as="select"
-                          value={rating}
+                          value={Number(rating)}
                           onChange={(e) => setRating(e.target.value)}
                         >
                           <option value="">Select...</option>
