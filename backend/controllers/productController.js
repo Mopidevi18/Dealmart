@@ -4,9 +4,35 @@ import Product from "../models/productModel.js";
 //description  Fetch all products
 //route        GET /api/prodcuts
 //access       public
+//req.query will take after ? words
 const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({});
-  res.json(products);
+  const pageSize = 2;
+  const page = Number(req.query.pageNumber) || 1;
+
+  const keyword = req.query.keyword
+    ? {
+        $or: [
+          {
+            name: {
+              $regex: req.query.keyword,
+              $options: "i",
+            },
+          },
+          {
+            brand: {
+              $regex: req.query.keyword,
+              $options: "i",
+            },
+          },
+        ],
+      }
+    : {};
+
+  const count = await Product.countDocuments({ ...keyword });
+  const products = await Product.find({ ...keyword })
+    .limit(pageSize) // limit is basically telling the database how many to return from the query.
+    .skip(pageSize * (page - 1)); //skip is basically how many products to skip over and return the following list of products.
+  res.json({ products, page, pages: Math.ceil(count / pageSize) });
 });
 
 //description   Fetch all products
@@ -125,6 +151,14 @@ const createProductReview = asyncHandler(async (req, res) => {
   }
 });
 
+//description   Get Top rated Products
+//route         GET /api/products/top
+//access        Public
+const getTopProducts = asyncHandler(async (req, res) => {
+  const products = await Product.find({}).sort({ rating: -1 }).limit(3);
+  res.json(products);
+});
+
 export {
   getProducts,
   getProductById,
@@ -132,4 +166,5 @@ export {
   createProduct,
   updateProduct,
   createProductReview,
+  getTopProducts,
 };
